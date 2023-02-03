@@ -1,7 +1,27 @@
 {
   "variants": {
-    "": {
+    "facing=down": {
+      "model": "goat_horn_block_mod:block/goat_horn",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "goat_horn_block_mod:block/goat_horn",
+      "y": 90
+    },
+    "facing=north": {
       "model": "goat_horn_block_mod:block/goat_horn"
+    },
+    "facing=south": {
+      "model": "goat_horn_block_mod:block/goat_horn",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "goat_horn_block_mod:block/goat_horn",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "goat_horn_block_mod:block/goat_horn",
+      "y": 270
     }
   }
 }

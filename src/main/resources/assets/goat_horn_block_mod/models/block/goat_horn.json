@@ -2,7 +2,7 @@
 	"credit": "Made with Blockbench",
 	"textures": {
 		"1": "goat_horn_block_mod:block/goat_horn",
-		"particle": "minecraft:block/gold"
+		"particle": "goat_horn_block_mod:block/goat_horn"
 	},
 	"elements": [
 		{

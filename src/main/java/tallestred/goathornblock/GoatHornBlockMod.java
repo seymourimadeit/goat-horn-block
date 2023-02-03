@@ -2,12 +2,16 @@ package tallestred.goathornblock;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
@@ -31,7 +35,7 @@ import tallestred.goathornblock.common.blocks.GoatHornBlock;
 public class GoatHornBlockMod {
     public static final String MODID = "goat_horn_block_mod";
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-    public static final RegistryObject<Block> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE)));
+    public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE)));
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public GoatHornBlockMod() {
@@ -55,10 +59,15 @@ public class GoatHornBlockMod {
         ItemStack playerItemStack = event.getItemStack();
         Player player = event.getEntity();
         if (playerItemStack.getItem() == Items.GOAT_HORN) {
-            player.swing(InteractionHand.MAIN_HAND);
+            player.swing(event.getHand());
             BlockPos pos = event.getHitVec().getBlockPos().relative(event.getHitVec().getDirection());
-            player.getLevel().setBlock(pos, GoatHornBlockMod.GOAT_HORN.get().defaultBlockState(), 11);
-            player.getLevel().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().defaultBlockState()));
+            BlockState originalBlock =  player.getLevel().getBlockState(pos);
+            GoatHornBlock goatHornBlock =  GoatHornBlockMod.GOAT_HORN.get();
+            BlockPlaceContext placeContext = new BlockPlaceContext(player.getLevel(), player, event.getHand(), playerItemStack, event.getHitVec());
+            player.getLevel().setBlock(pos, goatHornBlock.getStateForPlacement(placeContext), 11);
+            player.getLevel().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().getStateForPlacement(placeContext)));
+            SoundType soundtype =  originalBlock.getSoundType(player.getLevel(), pos, player);
+            player.getLevel().playSound(player, pos, originalBlock.getSoundType().getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
         }
     }
 
