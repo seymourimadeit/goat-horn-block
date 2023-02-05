@@ -38,9 +38,7 @@ public class GoatHornBlockMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE)));
-    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
-    private static final Logger LOGGER = LogUtils.getLogger();
-
+    private static final Logger LOGGER = LogUtils.getLogger();    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
     public GoatHornBlockMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
@@ -57,7 +55,6 @@ public class GoatHornBlockMod {
     public void onServerStarting(ServerStartingEvent event) {
     }
 
-
     @SubscribeEvent
     public void onItemRightClick(PlayerInteractEvent.RightClickBlock event) {
         ItemStack playerItemStack = event.getItemStack();
@@ -65,17 +62,19 @@ public class GoatHornBlockMod {
         if (playerItemStack.getItem() == Items.GOAT_HORN) {
             player.swing(event.getHand());
             BlockPos pos = event.getHitVec().getBlockPos().relative(event.getHitVec().getDirection());
-            BlockState originalBlock =  player.getLevel().getBlockState(pos);
-            GoatHornBlock goatHornBlock =  GoatHornBlockMod.GOAT_HORN.get();
+            BlockState originalBlock = player.getLevel().getBlockState(pos);
+            GoatHornBlock goatHornBlock = GoatHornBlockMod.GOAT_HORN.get();
             BlockPlaceContext placeContext = new BlockPlaceContext(player.getLevel(), player, event.getHand(), playerItemStack, event.getHitVec());
             player.getLevel().setBlock(pos, goatHornBlock.getStateForPlacement(placeContext), 11);
-            BlockEntity blockentity =  player.getLevel().getBlockEntity(pos);
+            BlockEntity blockentity = player.getLevel().getBlockEntity(pos);
             if (blockentity instanceof GoatHornBlockEntity goatHornBlockEntity) {
                 goatHornBlockEntity.setGoatHornItemDrop(playerItemStack.copy());
             }
             player.getLevel().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().getStateForPlacement(placeContext)));
-            SoundType soundtype =  originalBlock.getSoundType(player.getLevel(), pos, player);
+            SoundType soundtype = originalBlock.getSoundType(player.getLevel(), pos, player);
             player.getLevel().playSound(player, pos, originalBlock.getSoundType().getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+            if (!player.getAbilities().instabuild)
+                playerItemStack.shrink(1);
         }
     }
 
@@ -86,4 +85,6 @@ public class GoatHornBlockMod {
         public static void onClientSetup(FMLClientSetupEvent event) {
         }
     }
+
+
 }

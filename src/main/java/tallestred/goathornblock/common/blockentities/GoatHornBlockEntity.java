@@ -2,12 +2,11 @@ package tallestred.goathornblock.common.blockentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.registries.ForgeRegistries;
 import tallestred.goathornblock.GoatHornBlockMod;
 
 public class GoatHornBlockEntity extends BlockEntity {
@@ -26,13 +25,17 @@ public class GoatHornBlockEntity extends BlockEntity {
     @Override
     public void load(CompoundTag pTag) {
         super.load(pTag);
-        if (this.getGoatHornItemDrop() != null) {
-            if (pTag.contains(GOAT_HORN_ITEM, 10)) {
-                this.setGoatHornItemDrop(new ItemStack(ForgeRegistries.ITEMS.getValue(new ResourceLocation((GOAT_HORN_ITEM)))));
-            }
+        if (pTag.contains(GOAT_HORN_ITEM, 10)) {
+            this.setGoatHornItemDrop(ItemStack.of(pTag.getCompound(GOAT_HORN_ITEM)));
         }
     }
 
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
     public CompoundTag getUpdateTag() {
         return this.saveWithoutMetadata();
     }
@@ -41,7 +44,7 @@ public class GoatHornBlockEntity extends BlockEntity {
     protected void saveAdditional(CompoundTag pTag) {
         super.saveAdditional(pTag);
         if (this.getGoatHornItemDrop() != null)
-            pTag.putString(GOAT_HORN_ITEM, this.getGoatHornItemDrop().toString());
+            pTag.put(GOAT_HORN_ITEM, this.getGoatHornItemDrop().save(new CompoundTag()));
     }
 
     public ItemStack getGoatHornItemDrop() {

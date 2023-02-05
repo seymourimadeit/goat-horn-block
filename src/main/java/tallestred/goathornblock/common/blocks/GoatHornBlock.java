@@ -3,6 +3,7 @@ package tallestred.goathornblock.common.blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.InstrumentItem;
@@ -10,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -48,6 +50,25 @@ public class GoatHornBlock extends BaseEntityBlock {
             return instrument;
         } else {
             return super.getCloneItemStack(state, target, level, pos, player);
+        }
+    }
+
+    @Override
+    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
+        if (!pState.is(pNewState.getBlock())) {
+            BlockEntity blockentity = pLevel.getBlockEntity(pPos);
+            if (blockentity instanceof GoatHornBlockEntity hornBlockEntity) {
+                if (hornBlockEntity.getGoatHornItemDrop() == null)
+                    return;
+                ItemStack stack = hornBlockEntity.getGoatHornItemDrop().copy();
+                Direction direction = pState.getValue(FACING);
+                float f = 0.25F * (float) direction.getStepX();
+                float f1 = 0.25F * (float) direction.getStepZ();
+                ItemEntity itementity = new ItemEntity(pLevel, (double) pPos.getX() + 0.5D + (double) f, (double) (pPos.getY() + 1), (double) pPos.getZ() + 0.5D + (double) f1, stack);
+                itementity.setDefaultPickUpDelay();
+                pLevel.addFreshEntity(itementity);
+            }
+            super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
         }
     }
 
