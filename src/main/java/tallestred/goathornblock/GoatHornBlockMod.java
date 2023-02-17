@@ -1,12 +1,13 @@
 package tallestred.goathornblock;
 
-import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -17,6 +18,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.PlayLevelSoundEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -28,31 +30,49 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import org.slf4j.Logger;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
+import tallestred.goathornblock.networking.GHBMNetworking;
 
 @Mod(GoatHornBlockMod.MODID)
 public class GoatHornBlockMod {
     public static final String MODID = "goat_horn_block_mod";
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-    public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE)));
-    private static final Logger LOGGER = LogUtils.getLogger();    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
+    public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE).randomTicks()));
+
     public GoatHornBlockMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
         BLOCKS.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        GHBMNetworking.registerPackets();
         MinecraftForge.EVENT_BUS.register(this);
-    }
+    }    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
 
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
+    }
+
+    @SubscribeEvent
+    public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
+        if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
+            Level level = event.getLevel();
+            BlockPos soundPosition = new BlockPos(event.getPosition());
+            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, 10, 5, 10)) {
+                if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
+                    if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
+                        if (level.getBestNeighborSignal(blockpos) >= 1) {
+                            if (Minecraft.getInstance().getConnection() == null)
+                                return;
+                            entity.setSoundEvent(event.getSound().get().getLocation());
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @SubscribeEvent
@@ -87,4 +107,8 @@ public class GoatHornBlockMod {
     }
 
 
+
+
 }
+
+

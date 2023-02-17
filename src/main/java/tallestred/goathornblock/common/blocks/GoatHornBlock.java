@@ -3,6 +3,10 @@ package tallestred.goathornblock.common.blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Instrument;
@@ -14,20 +18,28 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.registries.ForgeRegistries;
+import tallestred.goathornblock.GoatHornBlockMod;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 
 import javax.annotation.Nullable;
 
 public class GoatHornBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
+    public static final BooleanProperty SOUND = BooleanProperty.create("sound");
     protected static final VoxelShape SHAPE_NORTH = Shapes.or(Block.box(4, -1, 0, 12, 7, 11), Block.box(6, 0, 11, 10, 4, 17));
     protected static final VoxelShape SHAPE_SOUTH = Shapes.or(Block.box(4, 2, 5, 12, 10, 16), Block.box(6, 0, -1, 10, 4, 5));
     protected static final VoxelShape SHAPE_EAST = Shapes.or(Block.box(5, 0, 4, 16, 8, 12), Block.box(0, 0, 6, 6, 4, 10));
@@ -37,7 +49,7 @@ public class GoatHornBlock extends BaseEntityBlock {
 
     public GoatHornBlock(Properties pProperties) {
         super(pProperties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(POWERED, false).setValue(SOUND, false));
     }
 
     @Override
@@ -67,9 +79,45 @@ public class GoatHornBlock extends BaseEntityBlock {
                 ItemEntity itementity = new ItemEntity(pLevel, (double) pPos.getX() + 0.5D + (double) f, (double) (pPos.getY() + 1), (double) pPos.getZ() + 0.5D + (double) f1, stack);
                 itementity.setDefaultPickUpDelay();
                 pLevel.addFreshEntity(itementity);
+                hornBlockEntity.setRemoved();
             }
             super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
         }
+    }
+
+    public void setSounds(GoatHornBlockEntity horn, Level level, BlockPos pos, BlockState state) {
+        if (state.getValue(SOUND)) {
+            SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(horn.getSoundEvent());
+            if (sound != null) {
+                level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
+            }
+            level.setBlock(pos, state.setValue(GoatHornBlock.SOUND, Boolean.valueOf(false)), 3);
+        }
+    }
+
+
+    @Override
+    public void neighborChanged(BlockState pState, Level pLevel, BlockPos pPos, Block pBlock, BlockPos pFromPos, boolean pIsMoving) {
+        if (pLevel.getBlockEntity(pPos) instanceof GoatHornBlockEntity horn) {
+            boolean neighborSignal = pLevel.hasNeighborSignal(pPos);
+            if (neighborSignal != pState.getValue(POWERED)) {
+                if (neighborSignal) {
+                    Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
+                    SoundEvent soundevent = instrumentHolder.get().soundEvent().value();
+                    float volume = instrumentHolder.get().range() / 16.0F;
+                    pLevel.playSound(null, pPos, soundevent, SoundSource.BLOCKS, volume, 1.0F);
+                    pLevel.gameEvent(GameEvent.INSTRUMENT_PLAY, pPos, GameEvent.Context.of(pState));
+                }
+                pLevel.setBlock(pPos, pState.setValue(POWERED, Boolean.valueOf(neighborSignal)), 3);
+            }
+        }
+        super.onNeighborChange(pState, pLevel, pPos, pFromPos);
+    }
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
+        return createTickerHelper(pBlockEntityType, GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get(), GoatHornBlockEntity::serverTick);
     }
 
     @Override
@@ -90,7 +138,6 @@ public class GoatHornBlock extends BaseEntityBlock {
         }
     }
 
-
     @Override
     public RenderShape getRenderShape(BlockState pState) {
         return RenderShape.MODEL;
@@ -99,7 +146,7 @@ public class GoatHornBlock extends BaseEntityBlock {
     @Override
     @Nullable
     public BlockState getStateForPlacement(BlockPlaceContext pContext) {
-        return this.defaultBlockState().setValue(FACING, pContext.getNearestLookingDirection().getOpposite());
+        return this.defaultBlockState().setValue(FACING, pContext.getNearestLookingDirection().getOpposite()).setValue(POWERED, false);
     }
 
     @Override
@@ -114,7 +161,7 @@ public class GoatHornBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> pBuilder) {
-        pBuilder.add(FACING);
+        pBuilder.add(FACING, POWERED, SOUND);
     }
 
     @org.jetbrains.annotations.Nullable
