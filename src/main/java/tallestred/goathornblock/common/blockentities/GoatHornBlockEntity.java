@@ -25,7 +25,7 @@ public class GoatHornBlockEntity extends BlockEntity {
 
     public static void serverTick(Level pLevel, BlockPos pPos, BlockState pState, GoatHornBlockEntity pBlockEntity) {
         for (Direction direction : Direction.values()) {
-            if (direction == pState.getValue(GoatHornBlock.FACING).getOpposite()) {
+            if (direction == pState.getValue(GoatHornBlock.FACING).getOpposite() && pState.getValue(GoatHornBlock.POWERED)) {
                 for (int i = 1; i < 90; ++i) {
                     BlockPos blockpos = pPos.relative(direction, i);
                     BlockState blockstate = pLevel.getBlockState(blockpos);

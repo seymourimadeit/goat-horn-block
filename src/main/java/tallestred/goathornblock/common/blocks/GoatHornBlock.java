@@ -3,9 +3,7 @@ package tallestred.goathornblock.common.blocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -102,6 +100,8 @@ public class GoatHornBlock extends BaseEntityBlock {
             boolean neighborSignal = pLevel.hasNeighborSignal(pPos);
             if (neighborSignal != pState.getValue(POWERED)) {
                 if (neighborSignal) {
+                    if (horn.getGoatHornItemDrop() == null)
+                        return;
                     Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
                     SoundEvent soundevent = instrumentHolder.get().soundEvent().value();
                     float volume = instrumentHolder.get().range() / 16.0F;
