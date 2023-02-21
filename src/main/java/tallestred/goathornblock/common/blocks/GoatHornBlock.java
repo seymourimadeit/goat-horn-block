@@ -85,12 +85,14 @@ public class GoatHornBlock extends BaseEntityBlock {
 
     public void setSounds(GoatHornBlockEntity horn, Level level, BlockPos pos, BlockState state) {
         if (state.getValue(SOUND)) {
-            SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(horn.getSoundEvent());
-            if (sound != null) {
-                level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
+            for (int i = 0; i < horn.getSounds().size(); ++i) {
+                SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(horn.getSounds().get(i));
+                if (sound != null) {
+                    level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
+                }
+                level.setBlock(pos, state.setValue(GoatHornBlock.SOUND, Boolean.valueOf(false)), 3);
+                level.gameEvent(GameEvent.BLOCK_ACTIVATE, pos, GameEvent.Context.of(state));
             }
-            level.setBlock(pos, state.setValue(GoatHornBlock.SOUND, Boolean.valueOf(false)), 3);
-            level.gameEvent(GameEvent.BLOCK_ACTIVATE, pos, GameEvent.Context.of(state));
         }
     }
 

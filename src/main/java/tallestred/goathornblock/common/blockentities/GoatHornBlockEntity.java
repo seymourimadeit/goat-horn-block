@@ -13,11 +13,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import tallestred.goathornblock.GoatHornBlockMod;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
 
+import java.util.ArrayList;
+
 public class GoatHornBlockEntity extends BlockEntity {
     protected final String GOAT_HORN_ITEM = "goat_horn_id";
     protected final String GOAT_SOUND_EVENT = "goat_sound";
     protected ItemStack goatHornItemDrop;
-    protected ResourceLocation soundEvent;
+    protected ArrayList<ResourceLocation> sounds = new ArrayList<>();
 
     public GoatHornBlockEntity(BlockPos pPos, BlockState pBlockState) {
         super(GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get(), pPos, pBlockState);
@@ -32,9 +34,11 @@ public class GoatHornBlockEntity extends BlockEntity {
                     if (blockstate.getBlock() instanceof GoatHornBlock hornBlock) {
                         if (pLevel.getBlockEntity(blockpos) instanceof GoatHornBlockEntity) {
                             pLevel.setBlock(blockpos, blockstate.setValue(GoatHornBlock.SOUND, Boolean.valueOf(true)), 3);
-                            if (blockstate.getValue(GoatHornBlock.SOUND) && pBlockEntity.getSoundEvent() != null)
+                            if (blockstate.getValue(GoatHornBlock.SOUND) && pBlockEntity.getSounds() != null)
                                 hornBlock.setSounds(pBlockEntity, pLevel, blockpos, blockstate);
-                            pBlockEntity.setSoundEvent(ResourceLocation.tryParse(""));
+                            for (int index = 0; index < pBlockEntity.getSounds().size(); ++index) {
+                                pBlockEntity.getSounds().set(index, ResourceLocation.tryParse(""));
+                            }
                         }
                     }
                 }
@@ -53,8 +57,11 @@ public class GoatHornBlockEntity extends BlockEntity {
         super.load(pTag);
         if (pTag.contains(GOAT_HORN_ITEM, 10))
             this.setGoatHornItemDrop(ItemStack.of(pTag.getCompound(GOAT_HORN_ITEM)));
-        if (pTag.contains(GOAT_SOUND_EVENT))
-            this.setSoundEvent(ResourceLocation.tryParse(GOAT_SOUND_EVENT));
+        if (pTag.contains(GOAT_SOUND_EVENT)) {
+            for (int i = 0; i < this.getSounds().size(); ++i) {
+                this.getSounds().set(i, ResourceLocation.tryParse(GOAT_SOUND_EVENT));
+            }
+        }
     }
 
     @Override
@@ -72,8 +79,10 @@ public class GoatHornBlockEntity extends BlockEntity {
         super.saveAdditional(pTag);
         if (this.getGoatHornItemDrop() != null)
             pTag.put(GOAT_HORN_ITEM, this.getGoatHornItemDrop().save(new CompoundTag()));
-        if (this.getSoundEvent() != null) {
-            pTag.putString(GOAT_SOUND_EVENT, this.getSoundEvent().toString());
+        if (this.getSounds() != null) {
+            for (int i = 0; i < this.getSounds().size(); ++i) {
+                pTag.putString(GOAT_SOUND_EVENT, this.getSounds().get(i).toString());
+            }
         }
     }
 
@@ -86,12 +95,12 @@ public class GoatHornBlockEntity extends BlockEntity {
         this.setChanged();
     }
 
-    public ResourceLocation getSoundEvent() {
-        return soundEvent;
+    public ArrayList<ResourceLocation> getSounds() {
+        return sounds;
     }
 
-    public void setSoundEvent(ResourceLocation soundEvent) {
-        this.soundEvent = soundEvent;
+    public void setSoundEvent(int index, ResourceLocation soundEvent) {
+        this.sounds.add(index, soundEvent);
         this.setChanged();
     }
 }

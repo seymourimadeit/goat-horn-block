@@ -65,7 +65,9 @@ public class GoatHornBlockMod {
                         if (level.getBestNeighborSignal(blockpos) >= 1) {
                             if (Minecraft.getInstance().getConnection() == null)
                                 return;
-                            entity.setSoundEvent(event.getSound().get().getLocation());
+                            for (int i = 0; i < 5; i++) {
+                                entity.setSoundEvent(i, event.getSound().get().getLocation());
+                            }
                         }
                     }
                 }
