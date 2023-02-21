@@ -90,6 +90,7 @@ public class GoatHornBlock extends BaseEntityBlock {
                 level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
             }
             level.setBlock(pos, state.setValue(GoatHornBlock.SOUND, Boolean.valueOf(false)), 3);
+            level.gameEvent(GameEvent.BLOCK_ACTIVATE, pos, GameEvent.Context.of(state));
         }
     }
 
