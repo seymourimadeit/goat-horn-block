@@ -7,6 +7,7 @@ import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,17 +28,18 @@ public class GoatHornBlockEntity extends BlockEntity {
 
     public static void serverTick(Level pLevel, BlockPos pPos, BlockState pState, GoatHornBlockEntity pBlockEntity) {
         for (Direction direction : Direction.values()) {
-            if (direction == pState.getValue(GoatHornBlock.FACING).getOpposite() && pState.getValue(GoatHornBlock.POWERED)) {
+            Direction oppositeFacingDirection = pState.getValue(GoatHornBlock.FACING).getOpposite();
+            if (direction == oppositeFacingDirection && pState.getValue(GoatHornBlock.POWERED)) {
                 for (int i = 1; i < 90; ++i) {
                     BlockPos blockpos = pPos.relative(direction, i);
                     BlockState blockstate = pLevel.getBlockState(blockpos);
-                    if (blockstate.getBlock() instanceof GoatHornBlock hornBlock) {
+                    if (blockstate.getBlock() instanceof GoatHornBlock hornBlock && pLevel.getBlockState(blockpos.relative(oppositeFacingDirection.getOpposite(), 1)).getBlock() instanceof RedStoneWireBlock) {
                         if (pLevel.getBlockEntity(blockpos) instanceof GoatHornBlockEntity) {
                             pLevel.setBlock(blockpos, blockstate.setValue(GoatHornBlock.SOUND, Boolean.valueOf(true)), 3);
                             if (blockstate.getValue(GoatHornBlock.SOUND) && pBlockEntity.getSounds() != null && blockstate.getValue(GoatHornBlock.POWERED))
                                 hornBlock.setSounds(pBlockEntity, pLevel, blockpos, blockstate);
                             for (int index = 0; index < pBlockEntity.getSounds().size(); ++index) {
-                                pBlockEntity.getSounds().set(index, ResourceLocation.tryParse(""));
+                                pBlockEntity.getSounds().clear();
                             }
                         }
                     }
