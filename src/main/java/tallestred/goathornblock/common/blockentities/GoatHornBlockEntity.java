@@ -38,16 +38,13 @@ public class GoatHornBlockEntity extends BlockEntity {
                             pLevel.setBlock(blockpos, blockstate.setValue(GoatHornBlock.SOUND, Boolean.valueOf(true)), 3);
                             if (blockstate.getValue(GoatHornBlock.SOUND) && pBlockEntity.getSounds() != null && blockstate.getValue(GoatHornBlock.POWERED))
                                 hornBlock.setSounds(pBlockEntity, pLevel, blockpos, blockstate);
-                            for (int index = 0; index < pBlockEntity.getSounds().size(); ++index) {
-                                pBlockEntity.getSounds().clear();
-                            }
+                            pBlockEntity.getSounds().clear(); // Stops sounds from playing repeatedly
                         }
                     }
                 }
             }
         }
     }
-
 
     @Override
     public BlockEntityType<?> getType() {
