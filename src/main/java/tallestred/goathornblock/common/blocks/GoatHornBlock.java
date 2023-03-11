@@ -104,7 +104,7 @@ public class GoatHornBlock extends BaseEntityBlock {
                 if (neighborSignal) {
                     if (horn.getGoatHornItemDrop() == null) return;
                     Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
-                    SoundEvent soundevent = instrumentHolder.get().soundEvent().value();
+                    SoundEvent soundevent = instrumentHolder.get().soundEvent();
                     float volume = instrumentHolder.get().range() / 16.0F;
                     pLevel.playSound(null, pPos, soundevent, SoundSource.BLOCKS, volume, 1.0F);
                     pLevel.gameEvent(GameEvent.INSTRUMENT_PLAY, pPos, GameEvent.Context.of(pState));

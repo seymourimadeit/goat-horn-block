@@ -66,7 +66,7 @@ public class GoatHornBlockMod {
                             if (Minecraft.getInstance().getConnection() == null)
                                 return;
                             for (int i = 0; i < 5; i++) {
-                                entity.setSoundEvent(i, event.getSound().get().getLocation());
+                                entity.setSoundEvent(i, event.getSound().getLocation());
                             }
                         }
                     }
