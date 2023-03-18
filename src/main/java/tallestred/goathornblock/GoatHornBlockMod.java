@@ -19,10 +19,11 @@ import net.minecraft.world.level.material.Material;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.PlayLevelSoundEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -30,6 +31,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
+import tallestred.goathornblock.config.GHBMConfig;
 
 @Mod(GoatHornBlockMod.MODID)
 public class GoatHornBlockMod {
@@ -45,23 +47,26 @@ public class GoatHornBlockMod {
         modEventBus.addListener(this::commonSetup);
         BLOCKS.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GHBMConfig.COMMON_SPEC);
         MinecraftForge.EVENT_BUS.register(this);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
+
     @SubscribeEvent
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
             BlockPos soundPosition = new BlockPos(event.getPosition());
-            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, 5, 5, 5)) {
+            int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
+            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, soundRange, soundRange, soundRange)) {
                 if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
                     if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
                         if (level.getBestNeighborSignal(blockpos) >= 1) {
                             if (Minecraft.getInstance().getConnection() == null)
                                 return;
-                            for (int i = 0; i < 5; i++) {
+                            for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
                                 entity.setSoundEvent(i, event.getSound().get().getLocation());
                             }
                         }

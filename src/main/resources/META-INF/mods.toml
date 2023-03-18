@@ -8,7 +8,7 @@ version="${file.jarVersion}" #mandatory
 displayName="Goat Horn Block Mod" #mandatory
 #updateJSONURL="https://change.me.example.invalid/updates.json" #optional
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
-#logoFile="examplemod.png" #optional
+logoFile="goathorn.png" #optional
 credits="Tallestred, Edmord for the goat horn block art" #optional
 description='''
 Adds a goat horn block.
