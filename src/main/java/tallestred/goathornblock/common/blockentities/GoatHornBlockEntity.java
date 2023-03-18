@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import tallestred.goathornblock.GoatHornBlockMod;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
+import tallestred.goathornblock.config.GHBMConfig;
 
 import java.util.ArrayList;
 
@@ -30,7 +31,7 @@ public class GoatHornBlockEntity extends BlockEntity {
         for (Direction direction : Direction.values()) {
             Direction oppositeFacingDirection = pState.getValue(GoatHornBlock.FACING).getOpposite();
             if (direction == oppositeFacingDirection && pState.getValue(GoatHornBlock.POWERED)) {
-                for (int i = 1; i < 90; ++i) {
+                for (int i = 1; i < GHBMConfig.COMMON.goatHornRedstoneSoundLimit.get(); ++i) {
                     BlockPos blockpos = pPos.relative(direction, i);
                     BlockState blockstate = pLevel.getBlockState(blockpos);
                     if (blockstate.getBlock() instanceof GoatHornBlock hornBlock && pLevel.getBlockState(blockpos.relative(oppositeFacingDirection.getOpposite(), 1)).getBlock() instanceof RedStoneWireBlock) {

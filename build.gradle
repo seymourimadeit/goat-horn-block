@@ -5,7 +5,7 @@ plugins {
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
-version = '1.0.0-1.19.2'
+version = '1.19.2-1.0.0'
 group = 'seymourimadeit.goathornblock' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'goathornblock'
 
@@ -112,7 +112,15 @@ repositories {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.19.2-43.2.6'
+    implementation fg.deobf("curse.maven:simple-voice-chat-416089:4372220")
 }
+
+repositories {
+    maven {
+        url "https://www.cursemaven.com"
+    }
+}
+
 
 // Example for how to get properties into the manifest for reading at runtime.
 jar {

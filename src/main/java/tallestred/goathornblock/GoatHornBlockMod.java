@@ -22,7 +22,9 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -30,6 +32,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
+import tallestred.goathornblock.config.GHBMConfig;
 
 @Mod(GoatHornBlockMod.MODID)
 public class GoatHornBlockMod {
@@ -37,16 +40,15 @@ public class GoatHornBlockMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F)));
-    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
-    // Why does the autoformatter keep putting the above line in weird ass places?
-
     public GoatHornBlockMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
         BLOCKS.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GHBMConfig.COMMON_SPEC);
         MinecraftForge.EVENT_BUS.register(this);
-    }
+    }    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
+    // Why does the autoformatter keep putting the above line in weird ass places?
 
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
@@ -59,13 +61,14 @@ public class GoatHornBlockMod {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
             BlockPos soundPosition = new BlockPos(event.getPosition());
-            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, 5, 5, 5)) {
+            int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
+            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, soundRange, soundRange, soundRange)) {
                 if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
                     if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
                         if (level.getBestNeighborSignal(blockpos) >= 1) {
                             if (Minecraft.getInstance().getConnection() == null)
                                 return;
-                            for (int i = 0; i < 5; i++) {
+                            for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
                                 entity.setSoundEvent(i, event.getSound().getLocation());
                             }
                         }
@@ -98,6 +101,8 @@ public class GoatHornBlockMod {
             }
         }
     }
+
+
 
 
 }
