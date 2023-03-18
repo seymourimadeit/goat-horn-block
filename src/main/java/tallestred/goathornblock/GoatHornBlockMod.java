@@ -50,10 +50,6 @@ public class GoatHornBlockMod {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
-
-    public void onServerStarting(ServerStartingEvent event) {
-    }
-
     @SubscribeEvent
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
