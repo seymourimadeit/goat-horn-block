@@ -58,7 +58,7 @@ public class GoatHornBlockMod {
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
-            BlockPos soundPosition = new BlockPos(event.getPosition());
+            BlockPos soundPosition = new BlockPos((int) event.getPosition().x(), (int) event.getPosition().y(), (int) event.getPosition().z());
             int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
             for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, soundRange, soundRange, soundRange)) {
                 if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
