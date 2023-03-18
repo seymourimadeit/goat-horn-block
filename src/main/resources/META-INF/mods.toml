@@ -1,13 +1,13 @@
 modLoader="javafml" #mandatory
 loaderVersion="[44,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
 license="MIT for code, CC BY-NC-SA 4.0 for art"
-#issueTrackerURL="https://change.me.to.your.issue.tracker.example.invalid/" #optional
+issueTrackerURL="https://github.com/seymourimadeit/goat-horn-block/issues"
 [[mods]] #mandatory
 modId="goat_horn_block_mod" #mandatory
 version="${file.jarVersion}" #mandatory
 displayName="Goat Horn Block Mod" #mandatory
-#updateJSONURL="https://change.me.example.invalid/updates.json" #optional
-#displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
+updateJSONURL="https://github.com/seymourimadeit/goat-horn-block/blob/main/update.json" #optional
+displayURL="https://www.curseforge.com/minecraft/mc-mods/goat-horn-block-mod" #optional
 logoFile="goathorn.png" #optional
 credits="Tallestred, Edmord for the goat horn block art" #optional
 description='''
