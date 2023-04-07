@@ -64,7 +64,7 @@ public class GoatHornBlockMod {
                 if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
                     if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
                         if (level.getBestNeighborSignal(blockpos) >= 1) {
-                            if (Minecraft.getInstance().getConnection() == null)
+                            if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
                                 return;
                             for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
                                 entity.setSoundEvent(i, event.getSound().get().getLocation());
