@@ -15,7 +15,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.PlayLevelSoundEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -38,7 +38,7 @@ public class GoatHornBlockMod {
     public static final String MODID = "goat_horn_block_mod";
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
-    public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of(Material.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F)));
+    public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F)));
     public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
     // Why does the autoformatter keep putting the above line in weird ass places?
 
@@ -82,18 +82,18 @@ public class GoatHornBlockMod {
         Player player = event.getEntity();
         if (playerItemStack.getItem() == Items.GOAT_HORN) {
             BlockPos pos = event.getHitVec().getBlockPos().relative(event.getHitVec().getDirection());
-            BlockState originalBlock = player.getLevel().getBlockState(pos);
+            BlockState originalBlock = player.level().getBlockState(pos);
             GoatHornBlock goatHornBlock = GoatHornBlockMod.GOAT_HORN.get();
-            BlockPlaceContext placeContext = new BlockPlaceContext(player.getLevel(), player, event.getHand(), playerItemStack, event.getHitVec());
-            if (player.getLevel().setBlock(pos, goatHornBlock.getStateForPlacement(placeContext), 11)) {
+            BlockPlaceContext placeContext = new BlockPlaceContext(player.level(), player, event.getHand(), playerItemStack, event.getHitVec());
+            if (player.level().setBlock(pos, goatHornBlock.getStateForPlacement(placeContext), 11)) {
                 player.swing(event.getHand());
-                BlockEntity blockentity = player.getLevel().getBlockEntity(pos);
+                BlockEntity blockentity = player.level().getBlockEntity(pos);
                 if (blockentity instanceof GoatHornBlockEntity goatHornBlockEntity) {
                     goatHornBlockEntity.setGoatHornItemDrop(playerItemStack.copy());
                 }
-                player.getLevel().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().getStateForPlacement(placeContext)));
-                SoundType soundtype = originalBlock.getSoundType(player.getLevel(), pos, player);
-                player.getLevel().playSound(player, pos, originalBlock.getSoundType().getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
+                player.level().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().getStateForPlacement(placeContext)));
+                SoundType soundtype = originalBlock.getSoundType(player.level(), pos, player);
+                player.level().playSound(player, pos, originalBlock.getSoundType().getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
                 if (!player.getAbilities().instabuild)
                     playerItemStack.shrink(1);
             }

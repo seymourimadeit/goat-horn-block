@@ -34,7 +34,7 @@ public class VoiceChatModPlugin implements VoicechatPlugin {
         if (connection != null) {
             if (event.getSenderConnection().getPlayer().getPlayer() instanceof Player player) {
                 VoicechatServerApi api = event.getVoicechat();
-                Level level = player.getLevel();
+                Level level = player.level();
                 BlockPos soundPosition = new BlockPos(player.blockPosition());
                 for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, 5, 5, 5)) {
                     if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
