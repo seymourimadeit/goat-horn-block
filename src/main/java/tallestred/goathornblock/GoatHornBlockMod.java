@@ -1,7 +1,9 @@
 package tallestred.goathornblock;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +20,7 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.PlayLevelSoundEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -39,8 +42,6 @@ public class GoatHornBlockMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F)));
-    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
-    // Why does the autoformatter keep putting the above line in weird ass places?
 
     public GoatHornBlockMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -54,33 +55,38 @@ public class GoatHornBlockMod {
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
 
+    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
+    // Why does the autoformatter keep putting the above line in weird ass places?
+
     @SubscribeEvent
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
             BlockPos soundPosition = new BlockPos((int) event.getPosition().x(), (int) event.getPosition().y(), (int) event.getPosition().z());
             int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
-            for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, soundRange, soundRange, soundRange)) {
-                if (level.getBlockEntity(blockpos) instanceof GoatHornBlockEntity entity) {
-                    if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
-                        if (level.getBestNeighborSignal(blockpos) >= 1) {
-                            if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
-                                return;
-                            for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
-                                entity.setSoundEvent(i, event.getSound().get().getLocation());
-                            }
-                        }
-                    }
+            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
+            if (blockPos != null && level.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
+                if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
+                    return;
+                for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
+                    goatHornBlockEntity.setSoundEvent(i, event.getSound().get().getLocation());
                 }
             }
         }
     }
 
     @SubscribeEvent
-    public void onItemRightClick(PlayerInteractEvent.RightClickBlock event) {
+    public void toolTip(ItemTooltipEvent event) {
+        if (event.getItemStack().getItem() == Items.GOAT_HORN) {
+            event.getToolTip().add(Component.translatable("item.goathornblockmod.goathorn.desc").withStyle(ChatFormatting.GRAY));
+        }
+    }
+
+    @SubscribeEvent
+    public void onItemRightClick (PlayerInteractEvent.RightClickBlock event){
         ItemStack playerItemStack = event.getItemStack();
         Player player = event.getEntity();
-        if (playerItemStack.getItem() == Items.GOAT_HORN) {
+        if (playerItemStack.getItem() == Items.GOAT_HORN && player.isCrouching()) {
             BlockPos pos = event.getHitVec().getBlockPos().relative(event.getHitVec().getDirection());
             BlockState originalBlock = player.level().getBlockState(pos);
             GoatHornBlock goatHornBlock = GoatHornBlockMod.GOAT_HORN.get();
@@ -99,8 +105,8 @@ public class GoatHornBlockMod {
             }
         }
     }
-
-
 }
+
+
 
 
