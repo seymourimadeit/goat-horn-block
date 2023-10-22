@@ -42,6 +42,7 @@ public class GoatHornBlockMod {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
     public static final RegistryObject<GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F)));
+    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
 
     public GoatHornBlockMod() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -55,16 +56,13 @@ public class GoatHornBlockMod {
     private void commonSetup(final FMLCommonSetupEvent event) {
     }
 
-    public static final RegistryObject<BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
-    // Why does the autoformatter keep putting the above line in weird ass places?
-
     @SubscribeEvent
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
             BlockPos soundPosition = new BlockPos((int) event.getPosition().x(), (int) event.getPosition().y(), (int) event.getPosition().z());
             int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
-            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
+            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.isLoaded(block) && level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
             if (blockPos != null && level.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
                 if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
                     return;
@@ -83,7 +81,7 @@ public class GoatHornBlockMod {
     }
 
     @SubscribeEvent
-    public void onItemRightClick (PlayerInteractEvent.RightClickBlock event){
+    public void onItemRightClick(PlayerInteractEvent.RightClickBlock event) {
         ItemStack playerItemStack = event.getItemStack();
         Player player = event.getEntity();
         if (playerItemStack.getItem() == Items.GOAT_HORN && player.isCrouching()) {
@@ -105,6 +103,8 @@ public class GoatHornBlockMod {
             }
         }
     }
+
+
 }
 
 
