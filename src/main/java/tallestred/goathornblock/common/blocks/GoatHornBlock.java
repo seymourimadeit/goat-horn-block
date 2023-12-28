@@ -1,8 +1,11 @@
 package tallestred.goathornblock.common.blocks;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -15,10 +18,12 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -29,13 +34,14 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.registries.ForgeRegistries;
 import tallestred.goathornblock.GoatHornBlockMod;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 
 import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 public class GoatHornBlock extends BaseEntityBlock {
+    public static final MapCodec<GoatHornBlock> CODEC = simpleCodec(p_304364_ -> new GoatHornBlock(p_304364_, () -> GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get()));
     public static final DirectionProperty FACING = BlockStateProperties.FACING;
     public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
     public static final BooleanProperty SOUND = BooleanProperty.create("sound");
@@ -46,13 +52,18 @@ public class GoatHornBlock extends BaseEntityBlock {
     protected static final VoxelShape SHAPE_DOWN = Shapes.or(Block.box(4, 1, 4, 12, 12, 12), Block.box(6, 9, 10, 10, 15, 14));
     protected static final VoxelShape SHAPE_WEST = Shapes.or(Block.box(1, 0, 4, 12, 8, 12), Block.box(11, 1, 6, 17, 5, 10));
 
-    public GoatHornBlock(Properties pProperties) {
+    public GoatHornBlock(Properties pProperties, Supplier<BlockEntityType<? extends GoatHornBlockEntity>> supplier) {
         super(pProperties);
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(POWERED, false).setValue(SOUND, false));
     }
 
     @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
+    @Override
+    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         if (level.getBlockEntity(pos) instanceof GoatHornBlockEntity horn) {
             if (horn.getGoatHornItemDrop() == null) return ItemStack.EMPTY;
             Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
@@ -85,7 +96,7 @@ public class GoatHornBlock extends BaseEntityBlock {
     public void setSounds(GoatHornBlockEntity horn, Level level, BlockPos pos, BlockState state) {
         if (state.getValue(SOUND)) {
             for (int i = 0; i < horn.getSounds().size(); ++i) {
-                SoundEvent sound = ForgeRegistries.SOUND_EVENTS.getValue(horn.getSounds().get(i));
+                SoundEvent sound = BuiltInRegistries.SOUND_EVENT.get(horn.getSounds().get(i));
                 if (sound != null) {
                     level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
@@ -104,8 +115,8 @@ public class GoatHornBlock extends BaseEntityBlock {
                 if (neighborSignal) {
                     if (horn.getGoatHornItemDrop() == null) return;
                     Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
-                    SoundEvent soundevent = instrumentHolder.get().soundEvent().value();
-                    float volume = instrumentHolder.get().range() / 16.0F;
+                    SoundEvent soundevent = instrumentHolder.value().soundEvent().value();
+                    float volume = instrumentHolder.value().range() / 16.0F;
                     pLevel.playSound(null, pPos, soundevent, SoundSource.BLOCKS, volume, 1.0F);
                     pLevel.gameEvent(GameEvent.INSTRUMENT_PLAY, pPos, GameEvent.Context.of(pState));
                 }
