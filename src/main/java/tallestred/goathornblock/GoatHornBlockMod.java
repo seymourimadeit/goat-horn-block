@@ -61,13 +61,15 @@ public class GoatHornBlockMod {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
             BlockPos soundPosition = new BlockPos((int) event.getPosition().x(), (int) event.getPosition().y(), (int) event.getPosition().z());
-            int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
-            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.isLoaded(block) && level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
-            if (blockPos != null && level.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
-                if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
-                    return;
-                for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
-                    goatHornBlockEntity.setSoundEvent(i, event.getSound().get().getLocation());
+            if (level.isLoaded(soundPosition)) {
+                int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
+                BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.isLoaded(block) && level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
+                if (blockPos != null && level.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
+                    if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
+                        return;
+                    for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
+                        goatHornBlockEntity.setSoundEvent(i, event.getSound().get().getLocation());
+                    }
                 }
             }
         }
