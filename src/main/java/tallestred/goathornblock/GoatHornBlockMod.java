@@ -3,6 +3,7 @@ package tallestred.goathornblock;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
@@ -17,6 +18,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.api.distmarker.Dist;
@@ -55,14 +58,18 @@ public class GoatHornBlockMod {
     public void onSoundPlayed(PlayLevelSoundEvent.AtPosition event) {
         if (event.getSource() != SoundSource.AMBIENT && event.getSource() != SoundSource.VOICE && event.getSource() != SoundSource.MASTER) {
             Level level = event.getLevel();
-            BlockPos soundPosition = new BlockPos((int) event.getPosition().x(), (int) event.getPosition().y(), (int) event.getPosition().z());
+            BlockPos soundPosition = BlockPos.containing(event.getPosition());
             int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
-            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.isLoaded(block) && level.getBlockEntity(block) instanceof GoatHornBlockEntity).orElse(null);
-            if (blockPos != null && level.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
-                if (level.isClientSide && Minecraft.getInstance().getConnection() == null)
-                    return;
-                for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
-                    goatHornBlockEntity.setSoundEvent(i, event.getSound().value().getLocation());
+            ChunkAccess soundChunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(soundPosition.getX()), SectionPos.blockToSectionCoord(soundPosition.getZ()));
+            if (level.isClientSide && Minecraft.getInstance().getConnection() == null && (soundChunk == null || !soundChunk.getStatus().isOrAfter(ChunkStatus.FULL)))
+                return;
+            BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())) != null && level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())).getStatus().isOrAfter(ChunkStatus.FULL) && level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())).getBlockState(block).getBlock() instanceof GoatHornBlock).orElse(null);
+            if (blockPos != null) {
+                ChunkAccess goatPosChunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(blockPos.getX()), SectionPos.blockToSectionCoord(blockPos.getZ()));
+                if (goatPosChunk != null && goatPosChunk.getStatus().isOrAfter(ChunkStatus.FULL) && goatPosChunk.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
+                    for (int i = 0; i < GHBMConfig.COMMON.amountOfSoundsAbleToBePlayedByGoatHorn.get(); i++) {
+                        goatHornBlockEntity.setSoundEvent(i, event.getSound().value().getLocation());
+                    }
                 }
             }
         }

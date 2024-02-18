@@ -79,7 +79,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     implementation "net.neoforged:neoforge:${neo_version}"
-    implementation "curse.maven:simple-voice-chat-416089:4961475"
+    implementation "curse.maven:simple-voice-chat-416089:5069105"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

@@ -4,13 +4,19 @@ import de.maxhenkel.voicechat.api.*;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.plugins.impl.PositionImpl;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.ChunkStatus;
+import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
+import tallestred.goathornblock.config.GHBMConfig;
 
 @ForgeVoicechatPlugin
 public class VoiceChatModPlugin implements VoicechatPlugin {
@@ -36,11 +42,15 @@ public class VoiceChatModPlugin implements VoicechatPlugin {
                 VoicechatServerApi api = event.getVoicechat();
                 Level level = player.level();
                 BlockPos soundPosition = new BlockPos(player.blockPosition());
-                for (BlockPos blockpos : BlockPos.withinManhattan(soundPosition, 5, 5, 5)) {
-                    if (level.getBlockState(blockpos).getBlock() instanceof GoatHornBlock) {
-                        if (level.getBestNeighborSignal(blockpos) >= 1) {
-                            this.repeatSoundToEnd(event, level.getBlockState(blockpos), level, blockpos, api);
-                        }
+                int soundRange = GHBMConfig.COMMON.goatHornSoundRange.get();
+                ChunkAccess soundChunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(soundPosition.getX()), SectionPos.blockToSectionCoord(soundPosition.getZ()));
+                if (level.isClientSide && Minecraft.getInstance().getConnection() == null && (soundChunk == null || !soundChunk.getStatus().isOrAfter(ChunkStatus.FULL)))
+                    return;
+                BlockPos blockPos = BlockPos.findClosestMatch(soundPosition, soundRange, soundRange, (block) -> level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())) != null && level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())).getStatus().isOrAfter(ChunkStatus.FULL) && level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(block.getX()), SectionPos.blockToSectionCoord(block.getZ())).getBlockState(block).getBlock() instanceof GoatHornBlock).orElse(null);
+                if (blockPos != null) {
+                    ChunkAccess goatPosChunk = level.getChunkSource().getChunkNow(SectionPos.blockToSectionCoord(blockPos.getX()), SectionPos.blockToSectionCoord(blockPos.getZ()));
+                    if (goatPosChunk != null && goatPosChunk.getStatus().isOrAfter(ChunkStatus.FULL) && goatPosChunk.getBlockEntity(blockPos) instanceof GoatHornBlockEntity goatHornBlockEntity && level.getBestNeighborSignal(blockPos) >= 1) {
+                        this.repeatSoundToEnd(event, level.getBlockState(blockPos), level, blockPos, api);
                     }
                 }
             }
