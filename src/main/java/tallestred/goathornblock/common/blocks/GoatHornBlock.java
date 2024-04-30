@@ -4,9 +4,11 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Instrument;
@@ -23,6 +25,9 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -31,6 +36,7 @@ import tallestred.goathornblock.GoatHornBlockMod;
 import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class GoatHornBlock extends BaseEntityBlock {
@@ -57,33 +63,9 @@ public class GoatHornBlock extends BaseEntityBlock {
 
     @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
-        if (level.getBlockEntity(pos) instanceof GoatHornBlockEntity horn) {
-            if (horn.getGoatHornItemDrop() == null) return ItemStack.EMPTY;
-            Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
-            ItemStack instrument = InstrumentItem.create(Items.GOAT_HORN, instrumentHolder);
-            return instrument;
-        } else {
-            return super.getCloneItemStack(state, target, level, pos, player);
-        }
-    }
-
-    @Override
-    public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
-        if (!pState.is(pNewState.getBlock())) {
-            BlockEntity blockentity = pLevel.getBlockEntity(pPos);
-            if (blockentity instanceof GoatHornBlockEntity hornBlockEntity) {
-                if (hornBlockEntity.getGoatHornItemDrop() == null) return;
-                ItemStack stack = hornBlockEntity.getGoatHornItemDrop().copy();
-                Direction direction = pState.getValue(FACING);
-                float f = 0.25F * (float) direction.getStepX();
-                float f1 = 0.25F * (float) direction.getStepZ();
-                ItemEntity itementity = new ItemEntity(pLevel, (double) pPos.getX() + 0.5D + (double) f, (double) (pPos.getY() + 1), (double) pPos.getZ() + 0.5D + (double) f1, stack);
-                itementity.setDefaultPickUpDelay();
-                pLevel.addFreshEntity(itementity);
-                hornBlockEntity.setRemoved();
-            }
-            super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
-        }
+        if (level.getBlockEntity(pos) instanceof GoatHornBlockEntity horn)
+            return InstrumentItem.create(Items.GOAT_HORN, horn.components().get(DataComponents.INSTRUMENT));
+        else return super.getCloneItemStack(state, target, level, pos, player);
     }
 
     public void setSounds(GoatHornBlockEntity horn, Level level, BlockPos pos, BlockState state) {
@@ -106,14 +88,15 @@ public class GoatHornBlock extends BaseEntityBlock {
             boolean neighborSignal = pLevel.hasNeighborSignal(pPos);
             if (neighborSignal != pState.getValue(POWERED)) {
                 if (neighborSignal) {
-                    if (horn.getGoatHornItemDrop() == null) return;
-                    Holder<Instrument> instrumentHolder = ((InstrumentItem) horn.getGoatHornItemDrop().getItem()).getInstrument(horn.getGoatHornItemDrop()).get();
-                    SoundEvent soundevent = instrumentHolder.value().soundEvent().value();
-                    float volume = instrumentHolder.value().range() / 16.0F;
-                    pLevel.playSound(null, pPos, soundevent, SoundSource.BLOCKS, volume, 1.0F);
-                    pLevel.gameEvent(GameEvent.INSTRUMENT_PLAY, pPos, GameEvent.Context.of(pState));
+                    Holder<Instrument> instrumentHolder = horn.getInstrument();
+                    if (instrumentHolder != null) {
+                        SoundEvent soundevent = instrumentHolder.value().soundEvent().value();
+                        float volume = instrumentHolder.value().range() / 16.0F;
+                        pLevel.playSound(null, pPos, soundevent, SoundSource.BLOCKS, volume, 1.0F);
+                        pLevel.gameEvent(GameEvent.INSTRUMENT_PLAY, pPos, GameEvent.Context.of(pState));
+                    }
                 }
-                pLevel.setBlock(pPos, pState.setValue(POWERED, Boolean.valueOf(neighborSignal)), 3);
+                pLevel.setBlock(pPos, pState.setValue(POWERED, neighborSignal), 3);
             }
         }
         super.onNeighborChange(pState, pLevel, pPos, pFromPos);

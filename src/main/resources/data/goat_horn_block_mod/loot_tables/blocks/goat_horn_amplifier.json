@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "include": [
+                "minecraft:instrument"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "minecraft:goat_horn"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "goat_horn_block_mod:blocks/goat_horn_amplifier"
+}

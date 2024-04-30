@@ -7,7 +7,10 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -23,6 +26,7 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -44,7 +48,7 @@ public class GoatHornBlockMod {
     public static final String MODID = "goat_horn_block_mod";
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registries.BLOCK, MODID);
-    public static final DeferredHolder<Block, GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F),  () -> GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get()));
+    public static final DeferredHolder<Block, GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().destroyTime(0.25F), GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY::get));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
 
     public GoatHornBlockMod(ModContainer container, IEventBus modEventBus, Dist dist) {
@@ -94,14 +98,17 @@ public class GoatHornBlockMod {
             if (player.level().setBlock(pos, goatHornBlock.getStateForPlacement(placeContext), 11)) {
                 player.swing(event.getHand());
                 BlockEntity blockentity = player.level().getBlockEntity(pos);
-                if (blockentity instanceof GoatHornBlockEntity goatHornBlockEntity) {
-                    goatHornBlockEntity.setGoatHornItemDrop(playerItemStack.copy());
+                if (blockentity instanceof GoatHornBlockEntity) {
+                    blockentity.applyComponentsFromItemStack(playerItemStack);
+                    blockentity.setChanged();
                 }
                 player.level().gameEvent(GameEvent.BLOCK_PLACE, pos, GameEvent.Context.of(player, GoatHornBlockMod.GOAT_HORN.get().getStateForPlacement(placeContext)));
                 SoundType soundtype = originalBlock.getSoundType(player.level(), pos, player);
                 player.level().playSound(player, pos, originalBlock.getSoundType().getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F, soundtype.getPitch() * 0.8F);
                 if (!player.getAbilities().instabuild)
                     playerItemStack.shrink(1);
+                event.setCancellationResult(InteractionResult.SUCCESS);
+                event.setCanceled(true);
             }
         }
     }

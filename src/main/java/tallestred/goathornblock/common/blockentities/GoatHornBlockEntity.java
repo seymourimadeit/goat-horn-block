@@ -2,11 +2,17 @@ package tallestred.goathornblock.common.blockentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Instrument;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.SeededContainerLoot;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,9 +26,10 @@ import java.util.ArrayList;
 
 public class GoatHornBlockEntity extends BlockEntity {
     protected final String GOAT_HORN_ITEM = "goat_horn_id";
+    protected final String GOAT_HORN_INSTRUMENT = "goat_horn_instrument";
     protected final String GOAT_SOUND_EVENT = "goat_sound";
-    protected ItemStack goatHornItemDrop;
     protected ArrayList<ResourceLocation> sounds = new ArrayList<>();
+    private Holder<Instrument> instrument;
 
     public GoatHornBlockEntity(BlockPos pPos, BlockState pBlockState) {
         super(GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get(), pPos, pBlockState);
@@ -56,8 +63,10 @@ public class GoatHornBlockEntity extends BlockEntity {
     @Override
     public void loadAdditional(CompoundTag pTag, HolderLookup.Provider lookup) {
         super.loadAdditional(pTag, lookup);
+        if (pTag.contains(GOAT_HORN_INSTRUMENT))
+            Instrument.CODEC.parse(lookup.createSerializationContext(NbtOps.INSTANCE), pTag.get(GOAT_HORN_INSTRUMENT)).ifSuccess(i -> instrument = i);
         if (pTag.contains(GOAT_HORN_ITEM, 10))
-            this.setGoatHornItemDrop(ItemStack.parseOptional(lookup, pTag.getCompound(GOAT_HORN_ITEM)));
+            this.instrument = ItemStack.parseOptional(lookup, pTag.getCompound(GOAT_HORN_ITEM)).get(DataComponents.INSTRUMENT); //For forwards compat, hope this works
         if (pTag.contains(GOAT_SOUND_EVENT)) {
             for (int i = 0; i < this.getSounds().size(); ++i) {
                 this.getSounds().set(i, ResourceLocation.tryParse(GOAT_SOUND_EVENT));
@@ -72,14 +81,14 @@ public class GoatHornBlockEntity extends BlockEntity {
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider lookup) {
-        return this.saveWithoutMetadata(lookup);
+        return this.saveWithoutMetadata(lookup); //TODO is this still true??
     }
 
     @Override
     protected void saveAdditional(CompoundTag pTag, HolderLookup.Provider lookup) {
         super.saveAdditional(pTag, lookup);
-        if (this.getGoatHornItemDrop() != null)
-            pTag.put(GOAT_HORN_ITEM, this.getGoatHornItemDrop().save(lookup));
+        if (this.instrument != null)
+            pTag.put(GOAT_HORN_INSTRUMENT, Instrument.CODEC.encodeStart(lookup.createSerializationContext(NbtOps.INSTANCE), this.instrument).getOrThrow());
         if (this.getSounds() != null) {
             for (int i = 0; i < this.getSounds().size(); ++i) {
                 pTag.putString(GOAT_SOUND_EVENT, this.getSounds().get(i).toString());
@@ -87,13 +96,27 @@ public class GoatHornBlockEntity extends BlockEntity {
         }
     }
 
-    public ItemStack getGoatHornItemDrop() {
-        return goatHornItemDrop;
+    @Override
+    protected void applyImplicitComponents(DataComponentInput input) {
+        super.applyImplicitComponents(input);
+        this.instrument = input.get(DataComponents.INSTRUMENT);
+
     }
 
-    public void setGoatHornItemDrop(ItemStack goatHornItemDrop) {
-        this.goatHornItemDrop = goatHornItemDrop;
-        this.setChanged();
+    @Override
+    protected void collectImplicitComponents(DataComponentMap.Builder builder) {
+        super.collectImplicitComponents(builder);
+        builder.set(DataComponents.INSTRUMENT, instrument);
+    }
+
+    @Override
+    public void removeComponentsFromTag(CompoundTag tag) {
+        super.removeComponentsFromTag(tag);
+        tag.remove(GOAT_HORN_ITEM);
+    }
+
+    public Holder<Instrument> getInstrument() {
+        return this.instrument;
     }
 
     public ArrayList<ResourceLocation> getSounds() {
