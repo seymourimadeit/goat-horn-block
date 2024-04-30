@@ -19,17 +19,16 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.ChunkStatus;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.NeoForgeConfig;
 import net.neoforged.neoforge.event.PlayLevelSoundEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
@@ -39,6 +38,7 @@ import tallestred.goathornblock.common.blockentities.GoatHornBlockEntity;
 import tallestred.goathornblock.common.blocks.GoatHornBlock;
 import tallestred.goathornblock.config.GHBMConfig;
 
+@SuppressWarnings("unused")
 @Mod(GoatHornBlockMod.MODID)
 public class GoatHornBlockMod {
     public static final String MODID = "goat_horn_block_mod";
@@ -47,10 +47,10 @@ public class GoatHornBlockMod {
     public static final DeferredHolder<Block, GoatHornBlock> GOAT_HORN = BLOCKS.register("goat_horn_amplifier", () -> new GoatHornBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).randomTicks().requiresCorrectToolForDrops().destroyTime(0.25F),  () -> GoatHornBlockMod.GOAT_HORN_BLOCK_ENTITY.get()));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<GoatHornBlockEntity>> GOAT_HORN_BLOCK_ENTITY = BLOCK_ENTITY_TYPES.register("goat_horn_block_entity", () -> BlockEntityType.Builder.of(GoatHornBlockEntity::new, GOAT_HORN.get()).build(null));
 
-    public GoatHornBlockMod(IEventBus modEventBus, Dist dist) {
+    public GoatHornBlockMod(ModContainer container, IEventBus modEventBus, Dist dist) {
         BLOCKS.register(modEventBus);
         BLOCK_ENTITY_TYPES.register(modEventBus);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GHBMConfig.COMMON_SPEC);
+        container.registerConfig(ModConfig.Type.COMMON, GHBMConfig.COMMON_SPEC);
         NeoForge.EVENT_BUS.register(this);
     }
 

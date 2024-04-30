@@ -2,6 +2,7 @@ package tallestred.goathornblock.common.blockentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -53,10 +54,10 @@ public class GoatHornBlockEntity extends BlockEntity {
     }
 
     @Override
-    public void load(CompoundTag pTag) {
-        super.load(pTag);
+    public void loadAdditional(CompoundTag pTag, HolderLookup.Provider lookup) {
+        super.loadAdditional(pTag, lookup);
         if (pTag.contains(GOAT_HORN_ITEM, 10))
-            this.setGoatHornItemDrop(ItemStack.of(pTag.getCompound(GOAT_HORN_ITEM)));
+            this.setGoatHornItemDrop(ItemStack.parseOptional(lookup, pTag.getCompound(GOAT_HORN_ITEM)));
         if (pTag.contains(GOAT_SOUND_EVENT)) {
             for (int i = 0; i < this.getSounds().size(); ++i) {
                 this.getSounds().set(i, ResourceLocation.tryParse(GOAT_SOUND_EVENT));
@@ -70,15 +71,15 @@ public class GoatHornBlockEntity extends BlockEntity {
     }
 
     @Override
-    public CompoundTag getUpdateTag() {
-        return this.saveWithoutMetadata();
+    public CompoundTag getUpdateTag(HolderLookup.Provider lookup) {
+        return this.saveWithoutMetadata(lookup);
     }
 
     @Override
-    protected void saveAdditional(CompoundTag pTag) {
-        super.saveAdditional(pTag);
+    protected void saveAdditional(CompoundTag pTag, HolderLookup.Provider lookup) {
+        super.saveAdditional(pTag, lookup);
         if (this.getGoatHornItemDrop() != null)
-            pTag.put(GOAT_HORN_ITEM, this.getGoatHornItemDrop().save(new CompoundTag()));
+            pTag.put(GOAT_HORN_ITEM, this.getGoatHornItemDrop().save(lookup));
         if (this.getSounds() != null) {
             for (int i = 0; i < this.getSounds().size(); ++i) {
                 pTag.putString(GOAT_SOUND_EVENT, this.getSounds().get(i).toString());
