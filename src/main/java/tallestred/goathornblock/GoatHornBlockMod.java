@@ -32,6 +32,8 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.PlayLevelSoundEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
@@ -110,6 +112,13 @@ public class GoatHornBlockMod {
                 event.setCancellationResult(InteractionResult.SUCCESS);
                 event.setCanceled(true);
             }
+        }
+    }
+
+    @Mod(value = GoatHornBlockMod.MODID, dist = Dist.CLIENT)
+    public static class GHBMClient {
+        public GHBMClient(ModContainer container, IEventBus modEventBus, Dist dist) {
+            container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
         }
     }
 }

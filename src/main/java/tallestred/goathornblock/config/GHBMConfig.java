@@ -22,11 +22,9 @@ public class GHBMConfig {
         public final ModConfigSpec.IntValue goatHornSoundRange;
 
         public CommonConfig(ModConfigSpec.Builder builder) {
-            builder.push("goat horn");
             amountOfSoundsAbleToBePlayedByGoatHorn = builder.comment("The maximum amount of sounds able to be played the goat horn is defined here.").defineInRange("Maximum amount", 5, Integer.MIN_VALUE, Integer.MAX_VALUE);
             goatHornRedstoneSoundLimit = builder.defineInRange("Defines how far a goat horn block from the other end of redstone can be in order to get sounds to transfer", 90, Integer.MIN_VALUE, Integer.MAX_VALUE);
             goatHornSoundRange = builder.defineInRange("Range for the sounds heard by a goat horn block", 5, Integer.MIN_VALUE, Integer.MAX_VALUE);
-            builder.pop();
         }
     }
 }

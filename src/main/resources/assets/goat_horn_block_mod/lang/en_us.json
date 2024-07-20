@@ -1,3 +1,6 @@
 {
-  "item.goathornblockmod.goathorn.desc": "Press crouch key to place"
+  "item.goathornblockmod.goathorn.desc": "Press crouch key to place",
+  "goat_horn_block_mod.configuration.Range for the sounds heard by a goat horn block": "Range for the sounds heard by a goat horn block",
+  "goat_horn_block_mod.configuration.Maximum amount": "Maximum amount",
+  "goat_horn_block_mod.configuration.Defines how far a goat horn block from the other end of redstone can be in order to get sounds to transfer": "Defines how far a goat horn block from the other end of redstone can be in order to get sounds to transfer"
 }
